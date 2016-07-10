@@ -6,13 +6,13 @@ cursor=connection.cursor()
 authToken=raw_input("Enter authentiation token: ")
 fieldsAttribute=raw_input("Enter field attributes: ")
 if len(fieldsAttribute)<1:
-    fieldsAttribute="feed.limit(2){from,place,comments{from,message},picture,created_time,message,link}"
+    fieldsAttribute="feed.limit(100){from,place,comments{from,message},picture,created_time,message,link}"
 baseUrl="https://graph.facebook.com/v2.6/913814308634931?"
 mainUrl=baseUrl+urllib.urlencode({'fields':fieldsAttribute,
                        'access_token': authToken})
 #print mainUrl
 count =0
-while(count<2):
+while(count>-1):
     
     postID=None
     message=None
@@ -23,11 +23,11 @@ while(count<2):
     count=count+1
     print  count   
     #print "baal ta kam koros na ken??"
-    print mainUrl + "\n\n"
+    #print mainUrl + "\n\n"
     pageFile=urllib.urlopen(mainUrl)
     pageData=pageFile.read()
     jsonData=json.loads(str(pageData))
-    print jsonData.keys()
+    #print jsonData.keys()
     #mainUrl=
     '''
     if 'feed' in jsonData:
@@ -37,6 +37,8 @@ while(count<2):
     '''
     if 'feed' in jsonData:
         jsonData=jsonData['feed']
+    if len(jsonData['data'])<1:
+        break;
     mainUrl=jsonData['paging']['next']
     #print jsonData['feed']['paging']['next']
     for data in jsonData['data']:
@@ -56,8 +58,13 @@ while(count<2):
         (postID, Message, PersonID, PictureID, PlaceID, Time)
         VALUES (?, ?, ?, ?, ?, ?)''',
         (postID, message, posterID, picLink, placeID, time,  ))
-        if count%30==0:
+        if count%10==0:
             connection.commit()
+            print "commiting"
+        if count%100==0:
+            choice=raw_input("Enter  y to continiue: ")
+            if(choice !="y"):
+                break
 
 connection.commit()
     
