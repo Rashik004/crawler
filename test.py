@@ -29,17 +29,13 @@ while(count>-1):
     jsonData=json.loads(str(pageData))
     #print jsonData.keys()
     #mainUrl=
-    '''
-    if 'feed' in jsonData:
-        mainUrl= jsonData['feed']['paging']['next']
-    else:
-        mainUrl=jsonData['paging']['next']
-    '''
     if 'feed' in jsonData:
         jsonData=jsonData['feed']
     if len(jsonData['data'])<1:
         break;
     mainUrl=jsonData['paging']['next']
+    print mainUrl
+    break
     #print jsonData['feed']['paging']['next']
     for data in jsonData['data']:
         if 'message' in data:
@@ -47,21 +43,35 @@ while(count>-1):
             #print message
         if 'id' in data:
             postID=data['id']
+            cursor.execute(''' SELECT * 
+            FROM Post
+            WHERE PostID=?''',
+            (postID, ))
+            try:
+                cursor.fetchone()[0]
+                print "Post already in database"
+                continue
+            except:
+                pass
+        else:
+            continue
         if 'place' in data:
             placeID=data['place']['id']
         if 'picture' in data:
             picLink=data['picture']
         if 'created_time' in data:
             time=data['created_time']
-        posterID=data['from']['id']
+        if 'from' in data:
+            posterID=data['from']['id']
+        #print poster
         cursor.execute(''' INSERT INTO Post
-        (postID, Message, PersonID, PictureID, PlaceID, Time)
+        (postID, Message, PersonID, PictureLink, PlaceID, Time)
         VALUES (?, ?, ?, ?, ?, ?)''',
         (postID, message, posterID, picLink, placeID, time,  ))
         if count%10==0:
             connection.commit()
             print "commiting"
-        if count%100==0:
+        if count%210==0:
             choice=raw_input("Enter  y to continiue: ")
             if(choice !="y"):
                 break
